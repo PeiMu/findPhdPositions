@@ -3,7 +3,7 @@ Hope this could be helpful when you're struggling with finding a suitable PhD/po
 
 ## How to use
 1. Signup to [Scraper API](https://www.scraperapi.com/signup) to avoid URL protection
-   If you really don't want to signup, this tool will also work without pass "key".
+   * If you really don't want to signup, this tool will also work without pass "key".
 2. Run python command in the command line
 ```python
 pip install -r requirements.txt
