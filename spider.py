@@ -1,5 +1,4 @@
 from urllib.request import Request, urlopen
-from link_finder import LinkFinder
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urlparse
@@ -13,8 +12,8 @@ class Spider:
         self.url = url
 
     # collect author information from specific conf
-    # TODO
-    def collect_specific_conf(self):
+    def collect_conf_researcher_org(self):
+        author_info_map = {}
         try:
             req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
             response = urlopen(req)
@@ -23,9 +22,24 @@ class Spider:
             for links in soup.findAll('span'):
                 links.unwrap()
             soup_content = str(soup)
+            paper_re_list = re.findall('href="#" title="Add event to your program"></a></td>'
+                                       '<td><a data-event-modal="(.*?)</td></tr>',
+                                       soup_content)
+            paper_name = ''
+            for paper_re in paper_re_list:
+                if paper_re is not None:
+                    paper_name_re = re.search('href="#">(.*?)<', paper_re)
+                    if paper_name_re is not None:
+                        paper_name = paper_name_re.group(1)
+                author_re_list = re.findall('href="(.*?)"', paper_re)
+                author_info_list = []
+                for author_re in author_re_list:
+                    if author_re is not None and author_re.find('profile') != -1:
+                        author_info_list.append(self.collect_info(author_re))
+                author_info_map.update({paper_name: author_info_list})
         except Exception as e:
             print(str(e))
-        return
+        return author_info_map
 
     def get_url(self, url):
         proxy_url = ''
@@ -61,7 +75,15 @@ class Spider:
                     paper_link = paper_link[-1]
                 paper_name = paper_re[3]
                 paper_map.update({paper_link: paper_name})
-        return paper_map
+        author_info_map = {}
+        for link in paper_map:
+            author_info = self.collect_info(link)
+            author_info = list(filter(None, author_info))
+            if not author_info:
+                author_info_map.update({paper_map[link]: []})
+                continue
+            author_info_map.update({paper_map[link]: author_info})
+        return author_info_map
 
     # Collect author information interface
     def collect_info(self, page_url):

@@ -8,7 +8,7 @@ def get_link(conf, year):
         elif year == '2022':
             url = 'https://conf.researchr.org/track/cgo-2022/cgo-2022-main-conference#event-overview'
             is_specific = True
-    elif conf == 'compiler construction':
+    elif conf.find('compiler construction') != -1:
         if year == '2021':
             url = 'https://conf.researchr.org/track/CC-2021/cc-research-papers?#event-overview'
             is_specific = True

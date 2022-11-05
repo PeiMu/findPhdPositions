@@ -19,25 +19,15 @@ if __name__ == "__main__":
     years = years.replace(' ', '')
     year_list = years.split(',')
     key = args.key
-    author_info_map = {'paper title': ['name',
-                                       'affiliation',
-                                       'personal_page',
-                                       'research_interest']}
+    author_info_map = {'paper title': ['name, affiliation, personal_page, research_interest']}
     for conf in conf_list:
         for year in year_list:
             url, is_specific = get_link(conf, year)
             spider = Spider(key, url)
             if is_specific:
-                paper_info = spider.collect_specific_conf()
+                author_info_map.update(spider.collect_conf_researcher_org())
             else:
-                paper_info = spider.collect_paper()
-            for link in paper_info:
-                author_info = spider.collect_info(link)
-                author_info = list(filter(None, author_info))
-                if not author_info:
-                    author_info_map.update({paper_info[link]: []})
-                    continue
-                author_info_map.update({paper_info[link]: author_info})
+                author_info_map.update(spider.collect_paper())
     file = 'author_info.txt'
     open(file, "w").close()
     with open(file, 'a') as f:
