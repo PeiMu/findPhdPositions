@@ -13,8 +13,9 @@ This tool gets inspiration from this process. It uses web spider by python to ge
 ```python
 pip install -r requirements.txt
 python main.py -h
-# use the full name of conferences or journals
-python main.py -confs "code generation and optimization, compiler construction" -years "2021, 2022" -key "your_key"
+# '-confs': use the full name of conferences or journals
+# '-years': list all years instead of ranges
+python main.py -confs "code generation and optimization, compiler construction" -years "2020, 2021, 2022" -key "your_key"
 ```
 3. Information will show in the console/terminal and save in "author_info.txt". Enjoy it!
 
