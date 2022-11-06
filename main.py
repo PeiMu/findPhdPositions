@@ -6,10 +6,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='find your interest projects!')
     parser.add_argument('-confs', default="code generation and optimization, compiler construction", type=str,
                         help='Which conference would you like to check? '
-                             'Please input "conf1, conf2"')
+                             'Please input "conf1, conf2, etc."')
     parser.add_argument('-years', default="2021, 2022", type=str,
                         help='Which years would you like to check? '
-                             'Please input "from, to"')
+                             'Please input "year1, year2, etc."')
     parser.add_argument('-key', default="", type=str,
                         help='Please input your scraper api key')
     args = parser.parse_args()
