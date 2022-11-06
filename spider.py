@@ -51,7 +51,7 @@ class Spider:
         return proxy_url
 
     # Collect paper information
-    def collect_paper(self):
+    def collect_google_scholar(self, conf):
         try:
             r = requests.get(url=self.get_url(self.url))
             content = r.text
@@ -63,26 +63,40 @@ class Spider:
             links.unwrap()
         soup_content = str(soup)
         paper_map = {}
-        paper_re_list = re.findall('data-clk-atid="(.*?)" href="(.*?) id=(.*?)">(.*?)</a>',
-                                   soup_content)
+        paper_pattern = 'div class="gs_ri"(.*?)' \
+                        'data-clk-atid="(.*?)" '\
+                        'href="(.*?) '\
+                        'id=(.*?)">(.*?)</a>(.*?)<b>'
+        paper_re_list = re.findall(paper_pattern, soup_content)
+        gs_author_info_list = []
         for paper_re in paper_re_list:
+            gs_author_info = []
             if paper_re is not None:
-                paper_link = paper_re[1]
+                paper_link = paper_re[2]
                 paper_link_re = re.search('href="(.*?)"', paper_link)
                 if paper_link_re is not None:
                     paper_link = paper_link_re.group(1)
                 else:
-                    paper_link = paper_link[-1]
-                paper_name = paper_re[3]
+                    paper_link = paper_link[:-1]
+                paper_name = paper_re[4]
                 paper_map.update({paper_link: paper_name})
+                gs_author_re_list = re.findall('href="(.*?)">(.*?)<', paper_re[5])
+                for gs_author_re in gs_author_re_list:
+                    if gs_author_re is not None:
+                        author_link = gs_author_re[0]
+                        author_name = gs_author_re[1]
+                        gs_author_info.append(author_name)
+            gs_author_info_list.append(gs_author_info)
         author_info_map = {}
+        idx = 0
         for link in paper_map:
             author_info = self.collect_info(link)
             author_info = list(filter(None, author_info))
             if not author_info:
-                author_info_map.update({paper_map[link]: []})
-                continue
-            author_info_map.update({paper_map[link]: author_info})
+                author_info_map.update({paper_map[link]: gs_author_info_list[idx]})
+                idx = idx + 1
+            else:
+                author_info_map.update({paper_map[link]: author_info})
         return author_info_map
 
     # Collect author information interface
