@@ -27,7 +27,7 @@ if __name__ == "__main__":
             if is_specific:
                 author_info_map.update(spider.collect_conf_researcher_org())
             else:
-                author_info_map.update(spider.collect_paper())
+                author_info_map.update(spider.collect_google_scholar(conf))
     file = 'author_info.txt'
     open(file, "w").close()
     with open(file, 'a') as f:
