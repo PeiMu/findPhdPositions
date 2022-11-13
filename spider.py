@@ -50,6 +50,24 @@ class Spider:
             proxy_url = url
         return proxy_url
 
+    # Return the first result of the Google search
+    def best_match_search(self, name):
+        name_url = name.replace(' ', '+')
+        search_url = 'https://www.google.com/search?q='+name_url
+        try:
+            r = requests.get(url=self.get_url(search_url))
+        except Exception as e:
+            print(str(e))
+            return set()
+        content = r.text
+        soup = BeautifulSoup(content, 'html.parser')
+        for links in soup.findAll('span'):
+            links.unwrap()
+        soup_content = str(soup)
+        best_match_link_re = re.search('(.*?)', soup_content)
+        best_match_link = best_match_link_re.group(1)
+        return best_match_link
+
     # Collect paper information
     def collect_google_scholar(self, conf):
         try:
@@ -83,9 +101,12 @@ class Spider:
                 gs_author_re_list = re.findall('href="(.*?)">(.*?)<', paper_re[5])
                 for gs_author_re in gs_author_re_list:
                     if gs_author_re is not None:
+                        # Todo: use author link to get author's further information
                         author_link = gs_author_re[0]
                         author_name = gs_author_re[1]
-                        gs_author_info.append(author_name)
+                        gs_author_info.append([author_name,
+                                               '',
+                                               self.best_match_search(author_name)])
             gs_author_info_list.append(gs_author_info)
         author_info_map = {}
         idx = 0
@@ -96,7 +117,10 @@ class Spider:
                 author_info_map.update({paper_map[link]: gs_author_info_list[idx]})
                 idx = idx + 1
             else:
-                author_info_map.update({paper_map[link]: author_info})
+                for author_f in author_info:
+                    if len(author_f) <= 2:
+                        author_f.append(self.best_match_search(author_f[0]))
+                    author_info_map.update({paper_map[link]: author_info})
         return author_info_map
 
     # Collect author information interface
@@ -107,6 +131,8 @@ class Spider:
             return self.collect_ieee_info(page_url)
         elif page_url.find('acm') != -1:
             return self.collect_acm_info(page_url)
+        elif page_url.find('sciencedirect') != -1:
+            return self.collect_sci_info(page_url)
         else:
             print("don't support such conference with ", page_url, "yet")
             return []
@@ -183,6 +209,32 @@ class Spider:
                     author_page_soup_content = str(author_page_soup)
         assert len(name) == len(affiliation)
         return list(zip(*[name, affiliation]))
+
+    def collect_sci_info(self, page_url):
+        req = Request(self.get_url(page_url), headers={'User-Agent': 'Mozilla/5.0'})
+        response = urlopen(req)
+        content = response.read()
+        soup = BeautifulSoup(content, 'html.parser')
+        name_affiliation_pair = []
+        for links in soup.findAll('span'):
+            links.unwrap()
+        soup_content = str(soup)
+        name_pattern = '\{"#name":"given-name","_":"(.*?)"\},' \
+                       '\{"#name":"surname","_":"(.*?)"\},' \
+                       '\{"#name":"cross-ref","\$":\{"refid":"(.*?)","id":"(.*?)"\}'
+        name_re_list = re.findall(name_pattern, soup_content)
+        for name_re in name_re_list:
+            name = name_re[0] + " " + name_re[1]
+            cross_ref = name_re[2]
+            affiliation_pattern = '\{"#name":"affiliation","\$":\{"id":"' + cross_ref + \
+                                  '","affiliation-id":"(.*?)"\},' \
+                                  '"\$\$":\[\{"#name":"label","_":"(.*?)"\},' \
+                                  '\{"#name":"textfn","\$":\{"id":"(.*?)"\},"_":"(.*?)"\}'
+            affiliation_re = re.search(affiliation_pattern, soup_content)
+            if affiliation_re is not None:
+                affiliation = affiliation_re.group(4)
+                name_affiliation_pair.append([name, affiliation])
+        return name_affiliation_pair
 
     # Collect author information of cgo format
     @staticmethod
