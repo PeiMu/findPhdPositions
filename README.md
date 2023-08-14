@@ -17,7 +17,9 @@ python main.py -h
 # '-years': list all years instead of ranges
 python main.py -confs="code generation and optimization, compiler construction" -years="2020, 2021, 2022" -key="your_key"
 ```
-3. Information will show in the console/terminal and save in "author_info.txt". Enjoy it!
+3. Information will show in the console/terminal and save in "author_info.txt".
+
+**Enjoy it!**
 
 ## References
 https://github.com/buckyroberts/Spider
